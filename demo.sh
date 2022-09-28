@@ -105,8 +105,18 @@ kubectl --namespace a-team get secrets
 kubectl --kubeconfig kubeconfig.yaml \
     get nodes
 
+# TODO: Add the secret from the k8s composition
+kubectl --kubeconfig kubeconfig.yaml \
+    --namespace crossplane-system \
+    create secret generic aws-creds \
+    --from-file creds=./aws-creds.conf
+
 # Q: What else do you need?
 # A: I need a shared database (I don't want to deploy it in my own environment)
+
+# TODO: Remove
+kubectl --namespace production apply \
+    --filename examples/sql/aws.yaml
 
 kubectl --kubeconfig kubeconfig.yaml \
     --namespace production apply \
@@ -127,12 +137,6 @@ cat packages/sql/definition.yaml
 
 cat packages/sql/aws.yaml
 
-# TODO: Add the secret from the k8s composition
-kubectl --kubeconfig kubeconfig.yaml \
-    --namespace crossplane-system \
-    create secret generic aws-creds \
-    --from-file creds=./aws-creds.conf
-
 kubectl --kubeconfig kubeconfig.yaml \
     --namespace a-team \
     get sqlclaims
@@ -142,10 +146,18 @@ kubectl --kubeconfig kubeconfig.yaml \
 # Q: What else do you need?
 # A: I need a database inside that DB server
 
-# TODO: Continue
+kubectl --kubeconfig kubeconfig.yaml \
+    get databases.postgresql.sql.crossplane.io
 
 # Q: What else do you need?
 # A: I need to create a schema in that database
+
+# TODO: Continue
+
+
+
+
+
 
 kubectl --namespace a-team \
     get secrets
