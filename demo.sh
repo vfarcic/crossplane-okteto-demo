@@ -16,6 +16,7 @@ git clone https://github.com/vfarcic/devops-toolkit-crossplane
 
 cd devops-toolkit-crossplane
 
+# TODO: Viktor: Remove
 kubectl krew install schemahero
 
 # TODO: Viktor: Remove
@@ -23,10 +24,6 @@ kubectl schemahero install
 
 helm repo add crossplane-stable \
     https://charts.crossplane.io/stable
-
-# TODO: Viktor: Remove
-helm repo add schemahero \
-    oci://ghcr.io/schemahero/helm/schemahero
 
 helm repo update
 
@@ -92,6 +89,9 @@ kubectl --namespace a-team \
 
 cat examples/k8s/aws-eks.yaml
 
+kubectl --namespace a-team apply \
+    --filename examples/k8s/aws-eks.yaml
+
 kubectl --namespace a-team \
     get clusterclaims
 
@@ -114,10 +114,6 @@ kubectl --kubeconfig kubeconfig.yaml \
 # Q: What else do you need?
 # A: I need a shared database (I don't want to deploy it in my own environment)
 
-# TODO: Remove
-kubectl --namespace production apply \
-    --filename examples/sql/aws.yaml
-
 kubectl --kubeconfig kubeconfig.yaml \
     --namespace production apply \
     --filename examples/sql/aws.yaml
@@ -138,28 +134,16 @@ cat packages/sql/definition.yaml
 cat packages/sql/aws.yaml
 
 kubectl --kubeconfig kubeconfig.yaml \
-    --namespace a-team \
+    --namespace production \
     get sqlclaims
 
 # Talk about something until the claim is `READY`
 
-# Q: What else do you need?
-# A: I need a database inside that DB server
+# Q: What else do you need?
+# A: I need to be able to access that database server
 
 kubectl --kubeconfig kubeconfig.yaml \
-    get databases.postgresql.sql.crossplane.io
-
-# Q: What else do you need?
-# A: I need to create a schema in that database
-
-# TODO: Continue
-
-
-
-
-
-
-kubectl --namespace a-team \
+    --namespace production \
     get secrets
 
 export DB_ENDPOINT=$(kubectl \
@@ -192,36 +176,42 @@ export DB_PASS=$(kubectl \
 
 env | grep DB_
 
-# TODO: Viktor: Add creation of the DB to the composition
+# Q: What else do you need?
+# A: I need a database inside that DB server
 
-kubectl --namespace a-team \
-    get databases.databases.schemahero.io
+kubectl --kubeconfig kubeconfig.yaml \
+    get databases.postgresql.sql.crossplane.io
 
-# TODO: Viktor: Switch to Kubernetes secrets
-# TODO: Viktor: Move the DB part to the composition
+# Open pgAdmin and show that the DB was created
+
+# Q: What else do you need?
+# A: I need to create a schema in that database
+
 cat examples/sql/schemahero-postgresql.yaml
 
-kubectl --namespace a-team apply \
+export DB_URI=postgresql://$DB_USER:$DB_PASS@$DB_ENDPOINT:$DB_PORT/my-db
+
+kubectl --kubeconfig kubeconfig.yaml \
+    --namespace production \
+    create secret generic my-db-uri \
+    --from-literal=value=$DB_URI
+
+kubectl --kubeconfig kubeconfig.yaml \
+    --namespace production \
+    apply \
     --filename examples/sql/schemahero-postgresql.yaml
 
-kubectl --namespace a-team \
+kubectl --kubeconfig kubeconfig.yaml \
+    --namespace production \
+    get databases.databases.schemahero.io
+
+kubectl --kubeconfig kubeconfig.yaml \
+    --namespace production \
     get tables.schemas.schemahero.io
-
-kubectl schemahero --namespace a-team \
-    get migrations
-
-# Replace `[...]` with the migration ID
-export MIGRATION_ID=[...]
-
-kubectl schemahero --namespace a-team \
-    describe migration $MIGRATION_ID
-
-kubectl schemahero --namespace a-team \
-    approve migration $MIGRATION_ID
 
 # TODO: Arsh: Use Okteto to deploy an app connected to Postgresql
 
-# TODO: Arsh: The app should be able to create a schema in Postgresql. Typically, The endpoint, port, user, and password are in the environment variables (`DB_*`).
+# TODO: Arsh: The endpoint, port, user, and password are in the environment variables (`DB_*`).
 
 # TODO: Arsh: Show that the apps is working and connected to the DB (e.g., create/retrieve some records in the DB)
 
@@ -231,19 +221,19 @@ kubectl schemahero --namespace a-team \
 
 ./examples/k8s/get-kubeconfig-eks.sh
 
-kubectl --kubeconfig kubeconfig-eks.yaml \
-    --namespace ingress-nginx delete service \
-    a-team-eks-ingress-ingress-nginx-controller
-
-kubectl --kubeconfig kubeconfig-eks.yaml \
+kubectl --kubeconfig kubeconfig.yaml \
     --namespace production delete \
     --filename examples/sql/aws.yaml
 
-kubectl --kubeconfig kubeconfig-eks.yaml \
+kubectl --kubeconfig kubeconfig.yaml \
     get managed
 
 # Wait until all the resources are deleted
 #   (ignore `release` and `object resources`)
+
+kubectl --kubeconfig kubeconfig.yaml \
+    --namespace ingress-nginx delete service \
+    a-team-eks-ingress-ingress-nginx-controller
 
 kubectl --namespace a-team delete \
     --filename examples/k8s/aws-eks.yaml
