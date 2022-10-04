@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-app
+  template:
+    metadata:
+      labels:
+        app: postgres-app
+    spec:
+      containers:
+      - image: rinkiyakedad/go-postgres-app:1.0.0
+        name: postgres-app
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-app
+spec:
+  type: ClusterIP
+  ports:
+  - name: "postgres-app"
+    port: 3000
+  selector:
+    app: postgres-app

@@ -1,0 +1,25 @@
+build:
+  postgres-app:
+    image: rinkiyakedad/go-postgres-app:1.0.0
+    context: .
+
+deploy:
+  - kubectl apply -f k8s.yaml
+
+dev:
+  postgres-app:
+    image: okteto/golang:1
+    command: bash
+    sync:
+      - .:/usr/src/app
+    volumes:
+      - /go
+      - /root/.cache
+    securityContext:
+      capabilities:
+        add:
+          - SYS_PTRACE
+    forward:
+      - 3000:3000
+    reverse:
+      - 5432:5432
