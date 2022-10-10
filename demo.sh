@@ -148,7 +148,7 @@ kubectl --namespace dev \
 kubectl --namespace dev \
     get secrets
 
-./examples/sql/schemahero-secret.sh dev
+./schemahero-secret.sh dev
 
 # Q: What else do you need?
 # A: I need a database inside that DB server
@@ -186,7 +186,13 @@ okteto up --namespace dev
 # Destroy #
 ###########
 
+cd ../devops-toolkit-crossplane
+
+unset KUBECONFIG
+
 ./examples/k8s/get-kubeconfig-eks.sh
+
+export KUBECONFIG=$PWD/kubeconfig.yaml
 
 kubectl --namespace dev delete \
     --filename examples/sql/aws.yaml
@@ -211,9 +217,3 @@ kubectl get managed
 #   (ignore `release` and `object resources`)
 
 # Destroy or reset the management cluster
-
-
-
-# TODO: Change the namespace to dev
-# TODO: EKS v1.22.13-eks-15b7512
-# TODO: `okteto up -n [NAMESPACE]`
