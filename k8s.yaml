@@ -15,6 +15,27 @@ spec:
       containers:
       - image: rinkiyakedad/go-postgres-app:1.0.0
         name: postgres-app
+        env:
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: my-db
+                key: username
+          - name: DB_PASS
+            valueFrom:
+              secretKeyRef:
+                name: my-db
+                key: password
+          - name: DB_ENDPOINT
+            valueFrom:
+              secretKeyRef:
+                name: my-db
+                key: endpoint
+          - name: DB_PORT
+            valueFrom:
+              secretKeyRef:
+                name: my-db
+                key: port
 
 ---
 
@@ -29,3 +50,5 @@ spec:
     port: 3000
   selector:
     app: postgres-app
+
+# kubectl create secret generic my-db --from-literal=username=arsh --from-literal=password= --from-literal=endpoint=localhost --from-literal=port=5432
