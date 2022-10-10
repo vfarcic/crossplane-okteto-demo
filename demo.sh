@@ -2,20 +2,25 @@
 # Intro #
 #########
 
-# TODO: Viktor: What is Crossplane?
+# TODO: Viktor: What is Crossplane? (short, we'll explain more during and after the demo)
 
-# TODO: Arsh: What is Okteto?
+# TODO: Arsh: What is Okteto? (short, we'll explain more during and after the demo)
 
 #########
 # Setup #
 #########
 
-# Create a Kubernetes cluster (a local cluster like Rancher Desktop should do)
+# Create a Kubernetes cluster (a local cluster like Rancher Desktop should do for the demo)
+
+# Install `okteto` CLI from https://www.okteto.com/docs/getting-started/#installing-okteto-cli
+
+git clone https://github.com/vfarcic/silly-demo
 
 git clone https://github.com/vfarcic/devops-toolkit-crossplane
 
 cd devops-toolkit-crossplane
 
+# TODO: Viktor: Remove
 kubectl krew install schemahero
 
 # TODO: Viktor: Remove
@@ -23,10 +28,6 @@ kubectl schemahero install
 
 helm repo add crossplane-stable \
     https://charts.crossplane.io/stable
-
-# TODO: Viktor: Remove
-helm repo add schemahero \
-    oci://ghcr.io/schemahero/helm/schemahero
 
 helm repo update
 
@@ -77,33 +78,7 @@ kubectl --namespace a-team \
 
 # Wait until it is `READY`
 
-########
-# Demo #
-########
-
-# Q: What would you like to do?
-# A: Simplify development
-
-# Q: How will you do that?
-# A: With Okteto
-
-# Q: What do you need?
-# A: I need a cluster
-
-cat examples/k8s/aws-eks.yaml
-
-kubectl --namespace a-team \
-    get clusterclaims
-
-# Q: What else do you need?
-# A: I need to be able to connect to that cluster
-
-kubectl --namespace a-team get secrets
-
 ./examples/k8s/get-kubeconfig-eks.sh
-
-kubectl --kubeconfig kubeconfig.yaml \
-    get nodes
 
 # TODO: Add the secret from the k8s composition
 kubectl --kubeconfig kubeconfig.yaml \
@@ -111,80 +86,89 @@ kubectl --kubeconfig kubeconfig.yaml \
     create secret generic aws-creds \
     --from-file creds=./aws-creds.conf
 
+########
+# Demo #
+########
+
+# Q: What would you like to do?
+# A: Simplify development
+
+# Q: How will you do that?
+# A: With Okteto
+
+# Q: What do you need?
+# A: I need a cluster
+
+cat examples/k8s/aws-eks.yaml
+
+kubectl --namespace a-team apply \
+    --filename examples/k8s/aws-eks.yaml
+
+kubectl --namespace a-team \
+    get clusterclaims
+
+kubectl get managed
+
+# Q: What else do you need?
+# A: I need to be able to connect to that cluster
+
+kubectl --namespace a-team get secrets
+
+./examples/k8s/get-kubeconfig-eks.sh
+
+export KUBECONFIG=$PWD/kubeconfig.yaml
+
+kubectl get nodes
+
 # Q: What else do you need?
 # A: I need a shared database (I don't want to deploy it in my own environment)
 
-# TODO: Remove
 kubectl --namespace production apply \
-    --filename examples/sql/aws.yaml
-
-kubectl --kubeconfig kubeconfig.yaml \
-    --namespace production apply \
     --filename examples/sql/aws.yaml
 
 cat examples/sql/aws.yaml
 
-kubectl --kubeconfig kubeconfig.yaml \
-    --namespace production \
+kubectl --namespace production \
     get sqlclaims
 
 kubectl get managed
-
-kubectl --kubeconfig kubeconfig.yaml \
-    get managed
 
 cat packages/sql/definition.yaml
 
 cat packages/sql/aws.yaml
 
-kubectl --kubeconfig kubeconfig.yaml \
-    --namespace a-team \
+kubectl --namespace production \
     get sqlclaims
-
-# Talk about something until the claim is `READY`
-
-# Q: What else do you need?
-# A: I need a database inside that DB server
-
-kubectl --kubeconfig kubeconfig.yaml \
-    get databases.postgresql.sql.crossplane.io
-
-# Q: What else do you need?
-# A: I need to create a schema in that database
 
 # TODO: Continue
 
+# Arsh: talk about Okteto if the claim is not yet ready
 
+# Q: What else do you need?
+# A: I need to be able to access that database server
 
-
-
-
-kubectl --namespace a-team \
+kubectl --namespace production \
     get secrets
 
 export DB_ENDPOINT=$(kubectl \
-    --kubeconfig kubeconfig.yaml \
     --namespace production \
     get secret my-db \
     --output jsonpath='{.data.endpoint}' \
     | base64 --decode)
 
 export DB_PORT=$(kubectl \
-    --kubeconfig kubeconfig.yaml \
     --namespace production \
     get secret my-db \
     --output jsonpath='{.data.port}' \
     | base64 --decode)
 
 export DB_USER=$(kubectl \
-    --kubeconfig kubeconfig.yaml \
     --namespace production \
     get secret my-db \
     --output jsonpath='{.data.username}' \
     | base64 --decode)
 
 export DB_PASS=$(kubectl \
-    --kubeconfig kubeconfig.yaml \
     --namespace production \
     get secret my-db \
     --output jsonpath='{.data.password}' \
@@ -192,38 +176,64 @@ export DB_PASS=$(kubectl \
 
 env | grep DB_
 
-# TODO: Viktor: Add creation of the DB to the composition
+# Q: What else do you need?
+# A: I need a database inside that DB server
 
-kubectl --namespace a-team \
-    get databases.databases.schemahero.io
+kubectl get databases.postgresql.sql.crossplane.io
 
-# TODO: Viktor: Switch to Kubernetes secrets
-# TODO: Viktor: Move the DB part to the composition
+# Open pgAdmin and show that the DB was created
+
+# Q: What else do you need?
+# A: I need to create a schema in that database
+
 cat examples/sql/schemahero-postgresql.yaml
 
-kubectl --namespace a-team apply \
+export DB_URI=postgresql://$DB_USER:$DB_PASS@$DB_ENDPOINT:$DB_PORT/my-db
+
+kubectl --namespace production \
+    create secret generic my-db-uri \
+    --from-literal=value=$DB_URI
+
+kubectl --namespace production \
+    apply \
     --filename examples/sql/schemahero-postgresql.yaml
 
-kubectl --namespace a-team \
+kubectl --namespace production \
+    get databases.databases.schemahero.io
+
+kubectl --namespace production \
     get tables.schemas.schemahero.io
 
-kubectl schemahero --namespace a-team \
-    get migrations
+cd ../silly-demo
 
-# Replace `[...]` with the migration ID
-export MIGRATION_ID=[...]
+# TODO: Arsh: From here on it's all about Okteto. Choose to showcase whatever you think would be good to show.
 
-kubectl schemahero --namespace a-team \
-    describe migration $MIGRATION_ID
+# TODO: The commands that follow are there only to show you how to run the app. Change them to leverage Okteto.
 
-kubectl schemahero --namespace a-team \
-    approve migration $MIGRATION_ID
+kubectl --namespace dev \
+    create secret generic my-db \
+    --from-literal=endpoint=$DB_ENDPOINT \
+    --from-literal=port=$DB_PORT \
+    --from-literal=username=$DB_USER \
+    --from-literal=password=$DB_PASS
 
-# TODO: Arsh: Use Okteto to deploy an app connected to Postgresql
+cat okteto.yml
 
-# TODO: Arsh: The app should be able to create a schema in Postgresql. Typically, The endpoint, port, user, and password are in the environment variables (`DB_*`).
+kubectl --namespace dev apply \
+    --kustomize kustomize/overlays/stateful
 
-# TODO: Arsh: Show that the apps is working and connected to the DB (e.g., create/retrieve some records in the DB)
+kubectl --namespace dev port-forward \
+    svc/silly-demo 8080:8080 &
+
+curl -X POST "localhost:8080/video?id=wNBG1-PSYmE&title=Kubernetes%20Policies%20And%20Governance%20-%20Ask%20Me%20Anything%20With%20Jim%20Bugwadia"
+
+curl -X POST "localhost:8080/video?id=VlBiLFaSi7Y&title=Scaleway%20-%20Everything%20We%20Expect%20From%20A%20Cloud%20Computing%20Service%3F"
+
+curl "localhost:8080/videos" | jq .
+
+# TODO: Viktor: Arsh, what is Okteto?
+
+# TODO: Arsh: Viktor, what is Crossplane?
 
 ###########
 # Destroy #
@@ -231,19 +241,19 @@ kubectl schemahero --namespace a-team \
 
 ./examples/k8s/get-kubeconfig-eks.sh
 
-kubectl --kubeconfig kubeconfig-eks.yaml \
-    --namespace ingress-nginx delete service \
-    a-team-eks-ingress-ingress-nginx-controller
-
-kubectl --kubeconfig kubeconfig-eks.yaml \
-    --namespace production delete \
+kubectl --namespace production delete \
     --filename examples/sql/aws.yaml
 
-kubectl --kubeconfig kubeconfig-eks.yaml \
-    get managed
+kubectl --namespace ingress-nginx \
+    delete service \
+    a-team-eks-ingress-ingress-nginx-controller
+
+kubectl get managed
 
 # Wait until all the resources are deleted
 #   (ignore `release` and `object resources`)
+
+unset KUBECONFIG
 
 kubectl --namespace a-team delete \
     --filename examples/k8s/aws-eks.yaml
@@ -253,4 +263,10 @@ kubectl get managed
 # Wait until all the resources are deleted
 #   (ignore `release` and `object resources`)
 
-# Destroy or reset the management cluster
+# Destroy or reset the management cluster
+
+
+
+# TODO: Change the namespace to dev
+# TODO: EKS v1.22.13-eks-15b7512
+# TODO: `okteto up -n [NAMESPACE]`
