@@ -72,7 +72,7 @@ func main() {
 	endpoint := os.Getenv("DB_ENDPOINT")
 	dbPort := os.Getenv("DB_PORT")
 
-	connStr := fmt.Sprintf("postgresql://%s:%s@%s:%s/todos?sslmode=disable", username, password, endpoint, dbPort)
+	connStr := fmt.Sprintf("postgresql://%s:%s@%s:%s/my-db?sslmode=disable", username, password, endpoint, dbPort)
 
 	// connStr := "postgresql://arsh:@localhost:5432/todos?sslmode=disable"
 
