@@ -14,17 +14,17 @@
 
 # Install `okteto` CLI from https://www.okteto.com/docs/getting-started/#installing-okteto-cli
 
-git clone https://github.com/vfarcic/silly-demo
+git clone https://github.com/vfarcic/crossplane-okteto-demo
 
 git clone https://github.com/vfarcic/devops-toolkit-crossplane
 
 cd devops-toolkit-crossplane
 
 # TODO: Viktor: Remove
-kubectl krew install schemahero
+# kubectl krew install schemahero
 
 # TODO: Viktor: Remove
-kubectl schemahero install
+# kubectl schemahero install
 
 helm repo add crossplane-stable \
     https://charts.crossplane.io/stable
@@ -71,7 +71,7 @@ kubectl apply \
 kubectl create namespace a-team
 
 kubectl --namespace a-team apply \
-    --filename examples/k8s/aws-eks.yaml
+    --filename examples/k8s/aws-eks-1-22.yaml
 
 kubectl --namespace a-team \
     get clusterclaims
@@ -99,10 +99,10 @@ kubectl --kubeconfig kubeconfig.yaml \
 # Q: What do you need?
 # A: I need a cluster
 
-cat examples/k8s/aws-eks.yaml
+cat examples/k8s/aws-eks-1-22.yaml
 
 kubectl --namespace a-team apply \
-    --filename examples/k8s/aws-eks.yaml
+    --filename examples/k8s/aws-eks-1-22.yaml
 
 kubectl --namespace a-team \
     get clusterclaims
@@ -123,12 +123,12 @@ kubectl get nodes
 # Q: What else do you need?
 # A: I need a shared database (I don't want to deploy it in my own environment)
 
-kubectl --namespace production apply \
+kubectl --namespace dev apply \
     --filename examples/sql/aws.yaml
 
 cat examples/sql/aws.yaml
 
-kubectl --namespace production \
+kubectl --namespace dev \
     get sqlclaims
 
 kubectl get managed
@@ -137,44 +137,18 @@ cat packages/sql/definition.yaml
 
 cat packages/sql/aws.yaml
 
-kubectl --namespace production \
+kubectl --namespace dev \
     get sqlclaims
-
-# TODO: Continue
 
 # Arsh: talk about Okteto if the claim is not yet ready
 
 # Q: What else do you need?
 # A: I need to be able to access that database server
 
-kubectl --namespace production \
+kubectl --namespace dev \
     get secrets
 
-export DB_ENDPOINT=$(kubectl \
-    --namespace production \
-    get secret my-db \
-    --output jsonpath='{.data.endpoint}' \
-    | base64 --decode)
-
-export DB_PORT=$(kubectl \
-    --namespace production \
-    get secret my-db \
-    --output jsonpath='{.data.port}' \
-    | base64 --decode)
-
-export DB_USER=$(kubectl \
-    --namespace production \
-    get secret my-db \
-    --output jsonpath='{.data.username}' \
-    | base64 --decode)
-
-export DB_PASS=$(kubectl \
-    --namespace production \
-    get secret my-db \
-    --output jsonpath='{.data.password}' \
-    | base64 --decode)
-
-env | grep DB_
+./examples/sql/schemahero-secret.sh dev
 
 # Q: What else do you need?
 # A: I need a database inside that DB server
@@ -186,54 +160,27 @@ kubectl get databases.postgresql.sql.crossplane.io
 # Q: What else do you need?
 # A: I need to create a schema in that database
 
-cat examples/sql/schemahero-postgresql.yaml
+cd ../crossplane-okteto-demo
 
-export DB_URI=postgresql://$DB_USER:$DB_PASS@$DB_ENDPOINT:$DB_PORT/my-db
-
-kubectl --namespace production \
-    create secret generic my-db-uri \
-    --from-literal=value=$DB_URI
-
-kubectl --namespace production \
-    apply \
-    --filename examples/sql/schemahero-postgresql.yaml
-
-kubectl --namespace production \
-    get databases.databases.schemahero.io
-
-kubectl --namespace production \
-    get tables.schemas.schemahero.io
-
-cd ../silly-demo
-
-# TODO: Arsh: From here on it's all about Okteto. Choose to showcase whatever you think would be good to show.
-
-# TODO: The commands that follow are there only to show you how to run the app. Change them to leverage Okteto.
-
-kubectl --namespace dev \
-    create secret generic my-db \
-    --from-literal=endpoint=$DB_ENDPOINT \
-    --from-literal=port=$DB_PORT \
-    --from-literal=username=$DB_USER \
-    --from-literal=password=$DB_PASS
-
-cat okteto.yml
+cat schemahero.yaml
 
 kubectl --namespace dev apply \
-    --kustomize kustomize/overlays/stateful
+    --filename schemahero.yaml
 
-kubectl --namespace dev port-forward \
-    svc/silly-demo 8080:8080 &
+kubectl --namespace dev \
+    get databases.databases.schemahero.io,tables.schemas.schemahero.io
 
-curl -X POST "localhost:8080/video?id=wNBG1-PSYmE&title=Kubernetes%20Policies%20And%20Governance%20-%20Ask%20Me%20Anything%20With%20Jim%20Bugwadia"
+# Arsh: From here on it's all about Okteto. Choose to showcase whatever you think would be good to show.
 
-curl -X POST "localhost:8080/video?id=VlBiLFaSi7Y&title=Scaleway%20-%20Everything%20We%20Expect%20From%20A%20Cloud%20Computing%20Service%3F"
+cat okteto.yaml
 
-curl "localhost:8080/videos" | jq .
+okteto up --namespace dev
 
-# TODO: Viktor: Arsh, what is Okteto?
+# TODO: Arsh: Continue from here
 
-# TODO: Arsh: Viktor, what is Crossplane?
+# Viktor: Arsh, what is Okteto?
+
+# Arsh: Viktor, what is Crossplane?
 
 ###########
 # Destroy #
@@ -241,7 +188,7 @@ curl "localhost:8080/videos" | jq .
 
 ./examples/k8s/get-kubeconfig-eks.sh
 
-kubectl --namespace production delete \
+kubectl --namespace dev delete \
     --filename examples/sql/aws.yaml
 
 kubectl --namespace ingress-nginx \

@@ -1,0 +1,32 @@
+apiVersion: databases.schemahero.io/v1alpha4
+kind: Database
+metadata:
+  name: my-db
+spec:
+  immediateDeploy: true
+  connection:
+    postgres:
+      uri:
+        valueFrom:
+          secretKeyRef:
+            name: my-db-uri
+            key: value
+
+---
+
+apiVersion: schemas.schemahero.io/v1alpha4
+kind: Table
+metadata:
+  name: todos
+spec:
+  database: my-db
+  name: todos
+  schema:
+    postgres:
+      primaryKey:
+      - item
+      columns:
+      - name: item
+        type: text
+        constraints:
+          notNull: true
