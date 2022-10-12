@@ -1,10 +1,11 @@
 build:
   postgres-app:
-    image: rinkiyakedad/go-postgres-app:1.0.0
+    image: vfarcic/go-postgres-app:1.0.0
     context: .
 
 deploy:
-  - kubectl apply -f k8s.yaml
+  - kubectl apply --filename schemahero.yaml
+  - kubectl apply --filename k8s.yaml
 
 dev:
   postgres-app:

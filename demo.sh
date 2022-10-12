@@ -80,7 +80,6 @@ kubectl --namespace a-team \
 
 ./examples/k8s/get-kubeconfig-eks.sh
 
-# TODO: Add the secret from the k8s composition
 kubectl --kubeconfig kubeconfig.yaml \
     --namespace crossplane-system \
     create secret generic aws-creds \
@@ -148,7 +147,7 @@ kubectl --namespace dev \
 kubectl --namespace dev \
     get secrets
 
-./schemahero-secret.sh dev
+./examples/sql/schemahero-secret.sh dev
 
 # Q: What else do you need?
 # A: I need a database inside that DB server
@@ -162,19 +161,21 @@ kubectl get databases.postgresql.sql.crossplane.io
 
 cd ../crossplane-okteto-demo
 
-cat schemahero.yaml
-
-kubectl --namespace dev apply \
-    --filename schemahero.yaml
-
-kubectl --namespace dev \
-    get databases.databases.schemahero.io,tables.schemas.schemahero.io
-
-# Arsh: From here on it's all about Okteto. Choose to showcase whatever you think would be good to show.
-
 cat okteto.yaml
 
+okteto context use
+
 okteto up --namespace dev
+
+show schemahero.yaml
+
+show k8s.yaml
+
+(in okteto terminal) env | grep DB
+
+(in okteto terminal) go run server.go
+
+# Arsh: From here on it's all about Okteto. Choose to showcase whatever you think would be good to show.
 
 # TODO: Arsh: Continue from here
 
