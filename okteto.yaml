@@ -22,5 +22,3 @@ dev:
           - SYS_PTRACE
     forward:
       - 3000:3000
-    reverse:
-      - 5432:5432
