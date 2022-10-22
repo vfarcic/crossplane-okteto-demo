@@ -50,5 +50,3 @@ spec:
     port: 3000
   selector:
     app: postgres-app
-
-# kubectl create secret generic my-db --from-literal=username=arsh --from-literal=password= --from-literal=endpoint=localhost --from-literal=port=5432

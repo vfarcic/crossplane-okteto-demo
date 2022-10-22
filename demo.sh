@@ -1,12 +1,4 @@
 #########
-# Intro #
-#########
-
-# TODO: Viktor: What is Crossplane? (short, we'll explain more during and after the demo)
-
-# TODO: Arsh: What is Okteto? (short, we'll explain more during and after the demo)
-
-#########
 # Setup #
 #########
 
@@ -19,12 +11,6 @@ git clone https://github.com/vfarcic/crossplane-okteto-demo
 git clone https://github.com/vfarcic/devops-toolkit-crossplane
 
 cd devops-toolkit-crossplane
-
-# TODO: Viktor: Remove
-# kubectl krew install schemahero
-
-# TODO: Viktor: Remove
-# kubectl schemahero install
 
 helm repo add crossplane-stable \
     https://charts.crossplane.io/stable
@@ -120,7 +106,7 @@ export KUBECONFIG=$PWD/kubeconfig.yaml
 kubectl get nodes
 
 # Q: What else do you need?
-# A: I need a shared database (I don't want to deploy it in my own environment)
+# A: I need a shared database server (I don't want to deploy it in my own environment)
 
 kubectl --namespace dev apply \
     --filename examples/sql/aws.yaml
@@ -157,7 +143,8 @@ kubectl get databases.postgresql.sql.crossplane.io
 # Open pgAdmin and show that the DB was created
 
 # Q: What else do you need?
-# A: I need to create a schema in that database
+
+# Arsh: From here on it's all about Okteto. Choose to showcase whatever you think would be good to show.
 
 cd ../crossplane-okteto-demo
 
@@ -167,21 +154,13 @@ okteto context use
 
 okteto up --namespace dev
 
-show schemahero.yaml
+cat schemahero.yaml
 
-show k8s.yaml
+cat k8s.yaml
 
 (in okteto terminal) env | grep DB
 
 (in okteto terminal) go run server.go
-
-# Arsh: From here on it's all about Okteto. Choose to showcase whatever you think would be good to show.
-
-# TODO: Arsh: Continue from here
-
-# Viktor: Arsh, what is Okteto?
-
-# Arsh: Viktor, what is Crossplane?
 
 ###########
 # Destroy #
@@ -189,11 +168,7 @@ show k8s.yaml
 
 cd ../devops-toolkit-crossplane
 
-unset KUBECONFIG
-
 ./examples/k8s/get-kubeconfig-eks.sh
-
-export KUBECONFIG=$PWD/kubeconfig.yaml
 
 kubectl --namespace dev delete \
     --filename examples/sql/aws.yaml
@@ -205,7 +180,7 @@ kubectl --namespace ingress-nginx \
 kubectl get managed
 
 # Wait until all the resources are deleted
-#   (ignore `release` and `object resources`)
+#   (ignore `database` resource)
 
 unset KUBECONFIG
 
