@@ -1,18 +1,19 @@
 build:
   postgres-app:
-    image: vfarcic/go-postgres-app:1.0.0
+    image: ramiro/go-postgres-app:1.0.0
     context: .
 
 deploy:
-  - kubectl apply --filename schemahero.yaml
+  #- kubectl apply --filename schemahero.yaml
   - kubectl apply --filename k8s.yaml
 
 dev:
   postgres-app:
     image: okteto/golang:1
     command: bash
+    workdir: /app
     sync:
-      - .:/usr/src/app
+      - .:/app
     volumes:
       - /go
       - /root/.cache
@@ -22,3 +23,4 @@ dev:
           - SYS_PTRACE
     forward:
       - 3000:3000
+      - 2345:2345

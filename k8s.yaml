@@ -13,7 +13,7 @@ spec:
         app: postgres-app
     spec:
       containers:
-      - image: vfarcic/go-postgres-app:1.0.0
+      - image: ramiro/go-postgres-app:1.0.0
         name: postgres-app
         env:
           - name: DB_USER
