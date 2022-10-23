@@ -12,7 +12,7 @@ dev:
     image: okteto/golang:1
     command: bash
     sync:
-      - .:/usr/src/app
+      - .:/app
     volumes:
       - /go
       - /root/.cache
